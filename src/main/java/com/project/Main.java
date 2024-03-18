@@ -14,8 +14,6 @@ public class Main extends Application {
     @Override
     public void start(Stage stage) throws Exception {
 
-        final int minWidth = 300;
-        final int minHeight = 600;
         final int windowWidth = 800;
         final int windowHeight = 600;
 
@@ -31,10 +29,9 @@ public class Main extends Application {
         stage.setScene(scene);
         // Cambio de titulo
         stage.setTitle("Encriptacion de archivos");
-        stage.setMinWidth(minWidth);
         stage.setWidth(windowWidth);
-        stage.setMinHeight(minHeight);
         stage.setHeight(windowHeight);
+        stage.setResizable(false);
         stage.show();
 
         // Add icon only if not Mac
@@ -43,5 +40,4 @@ public class Main extends Application {
             stage.getIcons().add(icon);
         }
     }
-
 }

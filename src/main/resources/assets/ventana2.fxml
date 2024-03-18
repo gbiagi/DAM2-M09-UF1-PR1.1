@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.project.ControllerEncrypt">
    <children>
       <AnchorPane prefHeight="75.0" prefWidth="800.0">
          <children>
@@ -16,32 +16,46 @@
                   <Font size="24.0" />
                </font>
             </Text>
-            <Button layoutX="14.0" layoutY="25.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="44.0" text="&lt;--" />
+            <Button layoutX="14.0" layoutY="25.0" mnemonicParsing="false" onAction="#returnMainScreen" prefHeight="25.0" prefWidth="44.0" text="&lt;--" />
          </children></AnchorPane>
       <AnchorPane prefHeight="525.0" prefWidth="800.0" AnchorPane.topAnchor="75.0">
          <children>
             <Line endX="706.0" layoutX="94.0" startX="-94.0" />
-            <Text layoutX="128.0" layoutY="115.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Clau pública:">
+            <Text layoutX="81.0" layoutY="115.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Clau pública:">
                <font>
                   <Font size="24.0" />
                </font>
             </Text>
-            <Text layoutX="204.0" layoutY="180.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Arxiu:">
+            <Text layoutX="164.0" layoutY="180.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Arxiu:">
                <font>
                   <Font size="24.0" />
                </font>
             </Text>
-            <Text layoutX="204.0" layoutY="254.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Destí:">
+            <Text layoutX="163.0" layoutY="254.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Destí:">
                <font>
                   <Font size="24.0" />
                </font>
             </Text>
-            <Button layoutX="316.0" layoutY="376.0" mnemonicParsing="false" prefHeight="53.0" prefWidth="169.0" text="Encriptar">
+            <Button layoutX="316.0" layoutY="376.0" mnemonicParsing="false" onAction="#encriptarArchivo" prefHeight="53.0" prefWidth="169.0" text="Encriptar">
                <font>
                   <Font size="24.0" />
                </font>
             </Button>
-            <TextField fx:id="textClauPublica" layoutX="275.0" layoutY="91.0" prefHeight="32.0" prefWidth="231.0" />
+            <Label fx:id="labelClauPublica" layoutX="246.0" layoutY="92.0" onMouseClicked="#selectPublicKey" prefHeight="34.0" prefWidth="402.0" style="-fx-border-color: black;" textAlignment="CENTER">
+               <font>
+                  <Font size="16.0" />
+               </font>
+            </Label>
+            <Label fx:id="labelArchivo" layoutX="246.0" layoutY="155.0" onMouseClicked="#selectFileToEncrypt" prefHeight="34.0" prefWidth="402.0" style="-fx-border-color: black;" textAlignment="CENTER" textOverrun="CLIP">
+               <font>
+                  <Font size="16.0" />
+               </font>
+            </Label>
+            <Label fx:id="labelDestino" layoutX="246.0" layoutY="229.0" onMouseClicked="#selectDestination" prefHeight="34.0" prefWidth="402.0" style="-fx-border-color: black;" textAlignment="CENTER" textOverrun="CLIP">
+               <font>
+                  <Font size="16.0" />
+               </font>
+            </Label>
          </children></AnchorPane>
    </children>
 </AnchorPane>

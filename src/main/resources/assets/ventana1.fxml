@@ -20,12 +20,12 @@
       <AnchorPane prefHeight="525.0" prefWidth="800.0" AnchorPane.topAnchor="75.0">
          <children>
             <Line endX="711.0" layoutX="89.0" startX="-100.0" />
-            <Button layoutX="294.0" layoutY="133.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="200.0" text="Encriptar arxiu" AnchorPane.leftAnchor="294.0" AnchorPane.rightAnchor="306.0">
+            <Button layoutX="294.0" layoutY="133.0" mnemonicParsing="false" onAction="#encriptarArchivo" prefHeight="50.0" prefWidth="200.0" text="Encriptar arxiu" AnchorPane.leftAnchor="294.0" AnchorPane.rightAnchor="306.0">
                <font>
                   <Font size="20.0" />
                </font>
             </Button>
-            <Button layoutX="295.0" layoutY="225.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="200.0" text="Desencriptar arxiu">
+            <Button layoutX="295.0" layoutY="225.0" mnemonicParsing="false" onAction="#desencriptarArchivo" prefHeight="50.0" prefWidth="200.0" text="Desencriptar arxiu">
                <font>
                   <Font size="20.0" />
                </font>
