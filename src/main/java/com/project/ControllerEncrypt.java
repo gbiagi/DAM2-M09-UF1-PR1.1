@@ -1,12 +1,12 @@
 package com.project;
 
 import javafx.event.ActionEvent;
-import com.didisoft.pgp.PGPLib;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.*;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.stage.FileChooser;
+import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRing;
 import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.operator.jcajce.JcePGPDataEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePublicKeyKeyEncryptionMethodGenerator;
@@ -32,17 +32,7 @@ public class ControllerEncrypt {
     File fileClavePublica;
     File fileEncriptar;
     File fileDestino;
-    String publicKey = "";
-
-    // create an instance of the library
-    PGPLib pgp = new PGPLib();
-
-    // is output ASCII or binary
-    boolean asciiArmor = false;
-    // should integrity check information be added
-    // set to true for compatibility with GnuPG 2.2.8+
-    boolean withIntegrityCheck = true;
-
+    PGPPublicKey publicKey;
 
     // select a file to encrypt
     public File selectFile() {
@@ -60,6 +50,7 @@ public class ControllerEncrypt {
     }
 
     // select a public key to encrypt
+
     public void selectPublicKey(){
         fileClavePublica = selectFile();
         if (fileClavePublica != null) {
@@ -74,7 +65,7 @@ public class ControllerEncrypt {
                     while (kIt.hasNext()) {
                         PGPPublicKey k = kIt.next();
                         if (k.isEncryptionKey()) {
-                            publicKey = new String(k.getFingerprint());
+                            publicKey = k;
                         }
                     }
                 }
@@ -109,18 +100,39 @@ public class ControllerEncrypt {
     }
 
     // encrypt the file with OpenPGP
-    public void encriptarArchivo() throws IOException, PGPException, NoSuchProviderException {
+    public void encriptarArchivo() {
+    if (fileEncriptar != null && fileDestino != null && publicKey != null) {
         try {
-            pgp.encryptFile("INPUT.txt",
-                    "public.key",
-                    "OUTPUT.pgp",
-                    asciiArmor,
-                    withIntegrityCheck);
-        } catch (com.didisoft.pgp.PGPException e) {
-            throw new RuntimeException(String.valueOf(e));
+            // Create a key ring generator using the public key
+            JcePublicKeyKeyEncryptionMethodGenerator keyGen = new JcePublicKeyKeyEncryptionMethodGenerator(publicKey);
+
+            // Create an encrypted data generator
+            PGPEncryptedDataGenerator encGen = new PGPEncryptedDataGenerator(
+                    new JcePGPDataEncryptorBuilder(PGPEncryptedData.CAST5).setWithIntegrityPacket(true).setSecureRandom(new SecureRandom()).setProvider("BC"));
+            encGen.addMethod(keyGen);
+
+            // Create an armored output stream with the destination file
+            try (OutputStream out = new BufferedOutputStream(new ArmoredOutputStream(new FileOutputStream(fileDestino)))) {
+                // Create a compressed data generator
+                PGPCompressedDataGenerator comData = new PGPCompressedDataGenerator(PGPCompressedData.ZIP);
+
+                // Create a literal data generator
+                PGPLiteralDataGenerator lData = new PGPLiteralDataGenerator();
+
+                // Open a literal data object on the data generator
+                try (
+                     OutputStream cOut = comData.open(out);
+                     OutputStream pOut = lData.open(cOut, PGPLiteralData.BINARY, fileEncriptar)) {
+                    // Write the file data to the literal data object
+                    Files.copy(fileEncriptar.toPath(), pOut);
+                }
+            }
+            System.out.println("Archivo encriptado correctamente");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
-
+}
         public void returnMainScreen() {
         UtilsViews.setView("MainScreen");
     }
