@@ -5,11 +5,15 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.stage.FileChooser;
 import org.bouncycastle.openpgp.*;
+import org.bouncycastle.openpgp.jcajce.JcaPGPObjectFactory;
 import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePublicKeyDataDecryptorFactoryBuilder;
+;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -72,70 +76,59 @@ public class ControllerDecrypt {
 
     public void desencriptarArchivo() {
         if (fileDesencriptar != null && fileDestino != null && fileClavePrivada != null) {
-            try {
-                // Open the encrypted file
-                try (InputStream in = new BufferedInputStream(new FileInputStream(fileDesencriptar))) {
-                    // Create a PGP object factory
-                    PGPObjectFactory pgpF = new PGPObjectFactory(PGPUtil.getDecoderStream(in), new JcaKeyFingerprintCalculator());
-                    System.out.println("PGP OK");
+            try (InputStream in = PGPUtil.getDecoderStream(new FileInputStream(fileDesencriptar))) {
+                // Load the secret key
+                PGPSecretKeyRingCollection pgpSec = new PGPSecretKeyRingCollection(
+                        PGPUtil.getDecoderStream(new FileInputStream(fileClavePrivada)),
+                        new JcaKeyFingerprintCalculator());
 
-                    // Read the next object from the factory
-                    Object o = pgpF.nextObject();
-                    System.out.println("Object OK");
-                    if (o instanceof PGPEncryptedDataList) {
-                        System.out.println("aaaaaaaaaaaaaaaaaaaaa");
-                        // Found an encrypted data list
-                        PGPEncryptedDataList enc = (PGPEncryptedDataList) o;
-                        System.out.println("Encrypted data OK");
+                // Get the first secret key
+                PGPSecretKey secretKey = pgpSec.getKeyRings().next().getSecretKey();
 
-                        // Get the encrypted data object
-                        PGPPublicKeyEncryptedData pbe = (PGPPublicKeyEncryptedData) enc.get(0);
-                        System.out.println("Encrypted data object OK");
+                // Decrypt the file
+                try (InputStream keyIn = new FileInputStream(fileClavePrivada)) {
+                    PGPPrivateKey privateKey = secretKey.extractPrivateKey(
+                            new JcePBESecretKeyDecryptorBuilder()
+                                    .setProvider("BC")
+                                    .build(textPassword.getText().toCharArray()));
 
-                        // Find the secret key
-                        PGPSecretKey pgpSecKey = findSecretKey(fileClavePrivada.getAbsolutePath(), pbe.getKeyID(), textPassword.getText().toCharArray());
-                        if (pgpSecKey == null) {
-                            throw new IllegalArgumentException("Secret key for message not found.");
-                        }
-                        System.out.println("Secret key OK");
+                    PGPObjectFactory pgpFactory = new PGPObjectFactory(in, new JcaKeyFingerprintCalculator());
+                    Object message = pgpFactory.nextObject();
+                    PGPLiteralData literalData = null;
+
+                    if (message instanceof PGPEncryptedDataList) {
+                        PGPEncryptedDataList encryptedDataList = (PGPEncryptedDataList) message;
+                        PGPPublicKeyEncryptedData encryptedData = (PGPPublicKeyEncryptedData) encryptedDataList.get(0);
 
                         // Decrypt the data
-                        InputStream clear = pbe.getDataStream(new JcePublicKeyDataDecryptorFactoryBuilder().setProvider("BC").build(pgpSecKey.extractPrivateKey(new JcePBESecretKeyDecryptorBuilder().setProvider("BC").build(textPassword.getText().toCharArray()))));
-                        System.out.println("Data decrypted OK");
+                        InputStream clear = encryptedData.getDataStream(new JcePublicKeyDataDecryptorFactoryBuilder()
+                                .setProvider("BC").build(privateKey));
 
-                        // Write the decrypted data to the destination file
-                        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(fileDestino))) {
-                            byte[] buffer = new byte[1024];
-                            int len;
-                            while ((len = clear.read(buffer)) != -1) {
-                                out.write(buffer, 0, len);
-                            }
+                        // Read the decrypted data
+                        PGPObjectFactory plainFactory = new PGPObjectFactory(clear, new JcaKeyFingerprintCalculator());
+                        message = plainFactory.nextObject();
+
+                        if (message instanceof PGPLiteralData) {
+                            literalData = (PGPLiteralData) message;
                         }
-                        System.out.println("Archivo desencriptado correctamente");
-                    } else {
-                        throw new IllegalArgumentException("No encrypted data found in the file.");
+                    }
+
+                    // Write the decrypted data to the output file
+                    try (InputStream dataStream = literalData.getInputStream();
+                         OutputStream out = new BufferedOutputStream(new FileOutputStream(fileDestino))) {
+                        byte[] buffer = new byte[4096];
+                        int bytesRead;
+                        while ((bytesRead = dataStream.read(buffer)) != -1) {
+                            out.write(buffer, 0, bytesRead);
+                        }
                     }
                 }
+                System.out.println("Archivo desencriptado correctamente");
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
-
-    // Method to find the secret key from the key ring file
-    private PGPSecretKey findSecretKey(String keyRingFile, long keyID, char[] pass) throws IOException {
-        try (InputStream keyIn = new FileInputStream(keyRingFile)) {
-            PGPSecretKeyRingCollection pgpSec = new PGPSecretKeyRingCollection((Collection<PGPSecretKeyRing>) keyIn);
-            PGPSecretKey pgpSecKey = pgpSec.getSecretKey(keyID);
-            if (pgpSecKey == null) {
-                return null;
-            }
-            return pgpSecKey;
-        } catch (PGPException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public void returnMainScreen() {
         UtilsViews.setView("MainScreen");
     }
